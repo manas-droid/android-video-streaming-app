@@ -1,0 +1,82 @@
+package com.example.videostreamingapp.ui.Adapters;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.example.videostreamingapp.R;
+import com.example.videostreamingapp.VideosAPI.Videos;
+import com.example.videostreamingapp.ui.Fragments.VideoFragment;
+import com.google.android.material.card.MaterialCardView;
+
+import java.util.List;
+
+public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosViewHolder> {
+    private List<Videos> videos;
+    private static final String TAG = "VideosAdapter";
+
+    public VideosAdapter(List<Videos> videos) {
+        this.videos = videos;
+    }
+
+    @NonNull
+    @Override
+    public VideosViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
+        View view = layoutInflater.inflate(R.layout.item_video, parent, false);
+        return new VideosViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull VideosViewHolder holder, int position) {
+        Videos video = videos.get(position);
+        holder.title.setText(video.getTitle());
+        holder.subTitle.setText(video.getSubtitle());
+        Glide.with(holder.itemView.getContext()).load(video.getThumb())
+                .placeholder(R.drawable.ic_placeholder)
+                .into(holder.thumbNail);
+        holder.materialCardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                VideoFragment videoFragment = new VideoFragment();
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("video", video);
+                videoFragment.setArguments(bundle);
+                AppCompatActivity appCompatActivity = (AppCompatActivity) v.getContext();
+
+                appCompatActivity.getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, videoFragment)
+                        .addToBackStack(null)
+                        .commit();
+            }
+        });
+    }
+
+    @Override
+    public int getItemCount() {
+        return videos.size();
+    }
+
+
+    public class VideosViewHolder extends RecyclerView.ViewHolder{
+        public TextView title, subTitle;
+        public ImageView thumbNail;
+        public MaterialCardView materialCardView;
+        public VideosViewHolder(@NonNull View itemView) {
+            super(itemView);
+            title = itemView.findViewById(R.id.title);
+            subTitle = itemView.findViewById(R.id.subTitle);
+            thumbNail = itemView.findViewById(R.id.thumbNail);
+            materialCardView = itemView.findViewById(R.id.card);
+        }
+    }
+}
