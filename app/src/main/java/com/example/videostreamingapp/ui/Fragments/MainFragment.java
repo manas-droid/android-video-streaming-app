@@ -37,16 +37,7 @@ public class MainFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         recyclerView = view.findViewById(R.id.recyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-
-
-        return view;
-
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         allVideosViewModel.fetchVideos();
         observer =  new Observer<List<Videos>>() {
             @Override
@@ -57,6 +48,14 @@ public class MainFragment extends Fragment {
                 }
             }
         };
-        allVideosViewModel.getListMutableLiveData().observe(this.getViewLifecycleOwner() , observer);
+        allVideosViewModel.getListMutableLiveData().observe(getActivity() , observer);
+
+        return view;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
     }
 }
