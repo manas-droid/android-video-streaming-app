@@ -1,19 +1,16 @@
 package com.example.videostreamingapp.ui.Fragments;
 
 import android.Manifest;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.app.job.JobService;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
+import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -30,28 +27,17 @@ import android.widget.VideoView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.videostreamingapp.R;
 import com.example.videostreamingapp.VideosAPI.Videos;
+import com.example.videostreamingapp.utils.Download;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-
+@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class VideoFragment extends Fragment {
     private Videos video;
     private TextView title , subTitle , description;
@@ -61,18 +47,13 @@ public class VideoFragment extends Fragment {
     private  static final String TAG = "VideoFragment";
     private String fileName;
     private String url;
-    private final int DOWNLOAD_NOTIFICATION_ID = 1221;
-
-    private AtomicBoolean isCancelled;
-    private Handler handler;
+    private final int JOB_CODE = 404;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle bundle = getArguments();
         video = (Videos) bundle.getSerializable("video");
-        isCancelled = new AtomicBoolean(false);
-        handler = new Handler(Looper.getMainLooper());
         setHasOptionsMenu(true);
     }
 
@@ -116,6 +97,7 @@ public class VideoFragment extends Fragment {
         super.onCreateOptionsMenu(menu, inflater);
     }
 
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
@@ -146,66 +128,10 @@ public class VideoFragment extends Fragment {
 
     public void downloadFile(String fileName , String url){
         Log.d(TAG, "downloadFile: here");
-        ExecutorService executorService =Executors.newSingleThreadExecutor();
-        executorService.submit(() -> {
-            InputStream input = null;
-            OutputStream output = null;
-            HttpURLConnection connection = null;
-            try{
-                URL link = new URL(url);
-                connection =(HttpURLConnection) link.openConnection();
-                connection.connect();
-
-                if(connection.getResponseCode() != HttpURLConnection.HTTP_OK){
-                    return "Server returned HTTP "+connection.getResponseCode()+" "+connection.getResponseMessage();
-                }
-
-                int fileLength = connection.getContentLength();
-                input = connection.getInputStream();
-                File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) , fileName+".mp4");
-                output = new FileOutputStream(file);
-                byte data [] = new byte[1024*4];
-                long total = 0;
-                int count;
-                while((count = input.read(data))!= -1){
-                    if(isCancelled.get()){
-                        input.close();
-                        return null;
-                    }
-
-                    total+=count;
-                    int percentage =(int) total * 100 / fileLength;
-                    if(fileLength>0) {
-                        publishProgress(percentage);
-                    }
-                    output.write(data, 0, count);
-                }
-                return "file length "+fileLength;
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }finally {
-                try {
-                    if(output!=null)
-                        output.close();
-                    if(input!=null)
-                        input.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if(connection!=null)connection.disconnect();
-            }
-            return null;
-        });
-        executorService.shutdown();
-    }
-
-    public void publishProgress(int progress){
-        handler.post(()->{
-            Log.d(TAG, "publishProgress: "+progress+"  thread name "+Thread.currentThread().getName());
-        });
-
+        Intent serviceIntent = new Intent (getContext() , Download.class);
+        serviceIntent.putExtra("url", url);
+        serviceIntent.putExtra("fileName", fileName);
+        ContextCompat.startForegroundService(getActivity(), serviceIntent);
     }
 
 
