@@ -4,13 +4,11 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 
 import com.example.videostreamingapp.MainActivity;
@@ -29,33 +27,23 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import static com.example.videostreamingapp.App.CHANNEL_ID;
 
-@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class Download  extends Service {
     AtomicBoolean isCancelled = new AtomicBoolean(false);
+    private NotificationCompat.Builder notification;
     private static final String TAG = "Download";
-
+    private int startId = 1;
     @Override
     public void onCreate() {
-        Intent notificationIntent = new Intent(this , MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Download Service")
-                .setSmallIcon(R.drawable.ic_placeholder)
-                .setContentText("title")
-                .setContentIntent(pendingIntent)
-                .build();
-
-        startForeground(1, notification);
+        super.onCreate();
     }
 
-    public void getVideoFromURL(String url , String fileName) {
-        Log.d(TAG, "getVideoFromURL: here");
+    public void getVideoFromURL(String url , String fileName ) {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.submit(() -> {
             InputStream input = null;
             OutputStream output = null;
             HttpURLConnection connection = null;
+            long tempTotal = 0;
             try{
                 URL link = new URL(url);
                 connection =(HttpURLConnection) link.openConnection();
@@ -78,9 +66,16 @@ public class Download  extends Service {
                         return;
                     }
                     total+=count;
-                    Log.d(TAG, "getVideoFromURL: "+((total*100)/fileLength));
+                    if(tempTotal<total){
+                        notification.setProgress(100, (int)((total*100)/fileLength), false);
+                        startForeground(startId, notification.build());
+                        tempTotal = total;
+                    }
                     output.write(data, 0, count);
                 }
+                notification.setCategory("Download Finished").setProgress(0, 0, false).setOngoing(false);
+                startForeground(startId, notification.build());
+                stopSelf(startId);  // crucial to call it here after the video is downloaded
             } catch (MalformedURLException e) {
                 Log.e(TAG, "getVideoFromURL: ",e);
             } catch (IOException e) {
@@ -98,18 +93,26 @@ public class Download  extends Service {
             }
         });
         executorService.shutdown();
-        stopSelf();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "onStartCommand: here");
-        
+        notification = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                .setContentTitle("Download Service")
+                .setOngoing(true)
+                .setSmallIcon(R.drawable.ic_placeholder)
+                .setContentText("title")
+                .setProgress(100, 0, true)
+                .setCategory(CHANNEL_ID);
+        Log.d(TAG, "onStartCommand: "+startId);
+        startForeground(startId, notification.build());
+
         String url = intent.getStringExtra("url");
         String fileName = intent.getStringExtra("fileName");
-
+        this.startId  = startId;
         getVideoFromURL(url, fileName);
-        return START_NOT_STICKY;
+        return START_STICKY;
     }
 
     @Nullable
@@ -121,5 +124,6 @@ public class Download  extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        stopSelf(this.startId); // crucial to call this after the video is downloaded
     }
 }

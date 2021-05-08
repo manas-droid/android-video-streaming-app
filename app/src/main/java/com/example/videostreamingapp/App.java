@@ -3,6 +3,7 @@ package com.example.videostreamingapp;
 import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
@@ -19,12 +20,14 @@ public class App extends Application {
     public void createNotificationChannel(){
         Log.d(TAG, "createNotificationChannel: here");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
             NotificationChannel serviceChannel = new NotificationChannel(CHANNEL_ID,
                     "DownLoad Service Channel",
                     NotificationManager.IMPORTANCE_LOW);
 
-            NotificationManager manager = getSystemService(NotificationManager.class);
-
+            serviceChannel.enableLights(true);
+            serviceChannel.setShowBadge(true);
             manager.createNotificationChannel(serviceChannel);
         }
     }
