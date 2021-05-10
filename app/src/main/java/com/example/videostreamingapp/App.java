@@ -24,7 +24,7 @@ public class App extends Application {
 
             NotificationChannel serviceChannel = new NotificationChannel(CHANNEL_ID,
                     "DownLoad Service Channel",
-                    NotificationManager.IMPORTANCE_LOW);
+                    NotificationManager.IMPORTANCE_HIGH);
 
             serviceChannel.enableLights(true);
             serviceChannel.setShowBadge(true);
