@@ -1,16 +1,10 @@
 package com.example.videostreamingapp.ui.Fragments;
 
 import android.Manifest;
-import android.app.job.JobInfo;
-import android.app.job.JobScheduler;
-import android.app.job.JobService;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -31,11 +25,8 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.videostreamingapp.R;
-import com.example.videostreamingapp.VideosAPI.Videos;
+import com.example.videostreamingapp.VideosAPI.RetrofitResponse.Videos;
 import com.example.videostreamingapp.utils.Download;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class VideoFragment extends Fragment {

@@ -11,6 +11,8 @@ import android.content.IntentFilter;
 import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
+import android.widget.VideoView;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -22,7 +24,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -31,18 +32,29 @@ import java.util.concurrent.Executors;
 
 import static com.example.videostreamingapp.App.CHANNEL_ID;
 
-public class Download  extends Service implements Serializable {
+public class Download  extends Service {
     private NotificationCompat.Builder notification;
     private NotificationManager manager;
     private static final String TAG = "Download";
     private int startId = 1;
     private static final String ACTION = "com.example.videostreamingapp.STOP_DOWNLOAD";
-
+    private DownloadResponse response;
     private BroadcastReceiver onDownloadNotification;
     boolean isCancelled = false;
-        @Override
-    public void onCreate() {
+    @Override
+        public void onCreate() {
             super.onCreate();
+            Intent broadcastIntent = new Intent(ACTION);
+            PendingIntent actionIntent = PendingIntent.getBroadcast(this, 0, broadcastIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            notification = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                    .setContentTitle("Download Service")
+                    .setOngoing(true)
+                    .setSmallIcon(R.drawable.ic_placeholder)
+                    .setContentText("title")
+                    .addAction(R.mipmap.ic_launcher, "Cancel", actionIntent)
+                    .setProgress(100, 0, true)
+                    .setCategory(CHANNEL_ID);
+
             onDownloadNotification = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
@@ -54,7 +66,6 @@ public class Download  extends Service implements Serializable {
             IntentFilter intentFilter = new IntentFilter(ACTION);
             intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
             registerReceiver(onDownloadNotification , intentFilter);
-
         }
 
     public void getVideoFromURL(String url , String fileName ) {
@@ -83,19 +94,26 @@ public class Download  extends Service implements Serializable {
                 while((count = input.read(data))!= -1){
                     total+=count;
                     if(isCancelled){
+                        if(file.exists()) file.delete();
+                        response = DownloadResponse.CANCELLED;
                         break;
                     }
                     if(tempTotal<total){
                         notification.setProgress(100, (int)((total*100)/fileLength), false);
+                        notification.setContentText((int)((total*100)/fileLength)+" %");
                         manager.notify(this.startId, notification.build());
                         tempTotal = total;
                     }
                     output.write(data, 0, count);
                 }
-                
+                if(response == null) response = DownloadResponse.SUCCESS;
+
                 notification.setCategory("Download Finished").setProgress(0, 0, false);
+                VideoView videoView = new VideoView(getBaseContext());
                 manager.notify(this.startId, notification.build());
+
                 stopSelf(this.startId);  // crucial to call it here after the video is downloaded
+
             } catch (MalformedURLException e) {
                 Log.e(TAG, "getVideoFromURL: ",e);
             } catch (IOException e) {
@@ -110,6 +128,13 @@ public class Download  extends Service implements Serializable {
                     Log.e(TAG, "getVideoFromURL: ",e);
                 }
                 if(connection!=null)connection.disconnect();
+
+                if(response == DownloadResponse.SUCCESS){
+                    // save video class to SQLite
+
+
+                }
+
             }
         });
         executorService.shutdown();
@@ -118,19 +143,7 @@ public class Download  extends Service implements Serializable {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        Intent broadcastIntent = new Intent(ACTION);
-        PendingIntent actionIntent = PendingIntent.getBroadcast(this, 0, broadcastIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        notification = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                .setContentTitle("Download Service")
-                .setOngoing(true)
-                .setSmallIcon(R.drawable.ic_placeholder)
-                .setContentText("title")
-                .addAction(R.mipmap.ic_launcher, "Cancel", actionIntent)
-                .setProgress(100, 0, true)
-                .setCategory(CHANNEL_ID);
-
         manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-
 
         manager.notify(startId, notification.build());
 

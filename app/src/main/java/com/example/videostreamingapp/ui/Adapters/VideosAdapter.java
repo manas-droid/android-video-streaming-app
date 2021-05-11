@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.videostreamingapp.R;
-import com.example.videostreamingapp.VideosAPI.Videos;
+import com.example.videostreamingapp.VideosAPI.RetrofitResponse.Videos;
 import com.example.videostreamingapp.ui.Fragments.VideoFragment;
 import com.google.android.material.card.MaterialCardView;
 

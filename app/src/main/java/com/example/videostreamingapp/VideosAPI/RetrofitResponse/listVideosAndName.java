@@ -1,4 +1,4 @@
-package com.example.videostreamingapp.VideosAPI;
+package com.example.videostreamingapp.VideosAPI.RetrofitResponse;
 
 import java.util.List;
 

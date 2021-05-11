@@ -1,10 +1,28 @@
-package com.example.videostreamingapp.VideosAPI;
+package com.example.videostreamingapp.VideosAPI.RetrofitResponse;
+
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
 import java.io.Serializable;
 import java.util.List;
 
 
+
+
+@Entity(tableName = "video_database")
 public class Videos implements Serializable {
+
+    @PrimaryKey(autoGenerate = true)
+    private int id;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     private String description , title , thumb , subtitle;
     private List<String> sources;
 

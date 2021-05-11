@@ -2,11 +2,16 @@ package com.example.videostreamingapp.VideosAPI;
 
 import android.util.Log;
 
+import com.example.videostreamingapp.VideosAPI.RetrofitPackage.GetDataInstance;
+import com.example.videostreamingapp.VideosAPI.RetrofitPackage.RetrofitInstance;
+import com.example.videostreamingapp.VideosAPI.RetrofitResponse.Response;
+import com.example.videostreamingapp.VideosAPI.RetrofitResponse.Videos;
+import com.example.videostreamingapp.VideosAPI.RetrofitResponse.listVideosAndName;
+
 import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
-import retrofit2.Retrofit;
 
 public class DataSource {
     GetDataInstance getDataInstance;

@@ -1,29 +1,13 @@
 package com.example.videostreamingapp;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.fragment.app.Fragment;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.media.MediaPlayer;
-import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.MediaController;
-import android.widget.ProgressBar;
-import android.widget.VideoView;
 
-import com.example.videostreamingapp.VideosAPI.DataSource;
-import com.example.videostreamingapp.VideosAPI.Videos;
-import com.example.videostreamingapp.ui.Adapters.VideosAdapter;
-import com.example.videostreamingapp.ui.AllVideosViewModel;
+import com.example.videostreamingapp.ui.Fragments.DownloadedFragment;
 import com.example.videostreamingapp.ui.Fragments.MainFragment;
-
-import java.util.List;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -31,9 +15,32 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new MainFragment()).commit();
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigation);
+        bottomNavigationView.setOnNavigationItemSelectedListener(navigationItemSelectedListener);
 
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, new MainFragment())
+                .commit();
     }
+    private BottomNavigationView.OnNavigationItemSelectedListener navigationItemSelectedListener
+            = item -> {
+        Fragment selectedFragment = null;
 
+        switch (item.getItemId()){
+
+            case R.id.home:
+                selectedFragment = new MainFragment();
+                break;
+            case R.id.downLoaded:
+                selectedFragment = new DownloadedFragment();
+                break;
+            default: break;
+        }
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, selectedFragment)
+                .commit();
+        return true;
+    };
 
 }

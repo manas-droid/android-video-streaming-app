@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.videostreamingapp.R;
-import com.example.videostreamingapp.VideosAPI.Videos;
+import com.example.videostreamingapp.VideosAPI.RetrofitResponse.Videos;
 import com.example.videostreamingapp.ui.Adapters.VideosAdapter;
 import com.example.videostreamingapp.ui.AllVideosViewModel;
 

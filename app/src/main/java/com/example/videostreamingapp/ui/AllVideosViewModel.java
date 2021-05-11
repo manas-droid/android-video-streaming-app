@@ -4,7 +4,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.videostreamingapp.VideosAPI.DataSource;
-import com.example.videostreamingapp.VideosAPI.Videos;
+import com.example.videostreamingapp.VideosAPI.RetrofitResponse.Videos;
 
 import java.util.List;
 

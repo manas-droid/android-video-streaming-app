@@ -1,4 +1,4 @@
-package com.example.videostreamingapp.VideosAPI;
+package com.example.videostreamingapp.VideosAPI.RetrofitPackage;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
