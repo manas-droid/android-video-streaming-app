@@ -1,20 +1,20 @@
 package com.example.videostreamingapp.utils;
 
+
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Environment;
 import android.os.IBinder;
-import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
-import com.example.videostreamingapp.CancelBroadCastReceiver;
-import com.example.videostreamingapp.CancelInterface;
 import com.example.videostreamingapp.R;
 
 import java.io.File;
@@ -28,32 +28,34 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
+
 import static com.example.videostreamingapp.App.CHANNEL_ID;
 
 public class Download  extends Service implements Serializable {
-    public AtomicBoolean isCancelled = new AtomicBoolean(false);
     private NotificationCompat.Builder notification;
     private NotificationManager manager;
     private static final String TAG = "Download";
     private int startId = 1;
+    private static final String ACTION = "com.example.videostreamingapp.STOP_DOWNLOAD";
+
+    private BroadcastReceiver onDownloadNotification;
+    boolean isCancelled = false;
         @Override
     public void onCreate() {
-        Intent broadcastIntent = new Intent(this , CancelBroadCastReceiver.class);
-        broadcastIntent.putExtra("CancelInterface", this);
-        PendingIntent actionIntent = PendingIntent.getBroadcast(this, 0, broadcastIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            super.onCreate();
+            onDownloadNotification = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    Log.d(TAG, "onReceive: ");
+                    isCancelled = true;
+                }
+            };
 
-        notification = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                .setContentTitle("Download Service")
-                .setOngoing(true)
-                .setSmallIcon(R.drawable.ic_placeholder)
-                .setContentText("title")
-                .addAction(R.mipmap.ic_launcher, "Cancel", actionIntent)
-                .setProgress(100, 0, true)
-                .setCategory(CHANNEL_ID);
-        manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        super.onCreate();
-    }
+            IntentFilter intentFilter = new IntentFilter(ACTION);
+            intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
+            registerReceiver(onDownloadNotification , intentFilter);
+
+        }
 
     public void getVideoFromURL(String url , String fileName ) {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -75,18 +77,17 @@ public class Download  extends Service implements Serializable {
                 input = connection.getInputStream();
                 File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) , fileName+".mp4");
                 output = new FileOutputStream(file);
-                byte data [] = new byte[1024*4];
-                long total = 0;;;;;
+                byte[] data = new byte[1024*4];
+                long total = 0;
                 int count;
                 while((count = input.read(data))!= -1){
-                    if(isCancelled.get()){
-                        input.close();
+                    total+=count;
+                    if(isCancelled){
                         break;
                     }
-                    total+=count;
                     if(tempTotal<total){
                         notification.setProgress(100, (int)((total*100)/fileLength), false);
-                        startForeground(startId, notification.build());
+                        manager.notify(this.startId, notification.build());
                         tempTotal = total;
                     }
                     output.write(data, 0, count);
@@ -117,27 +118,29 @@ public class Download  extends Service implements Serializable {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        Intent broadcastIntent = new Intent(ACTION);
+        PendingIntent actionIntent = PendingIntent.getBroadcast(this, 0, broadcastIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        notification = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                .setContentTitle("Download Service")
+                .setOngoing(true)
+                .setSmallIcon(R.drawable.ic_placeholder)
+                .setContentText("title")
+                .addAction(R.mipmap.ic_launcher, "Cancel", actionIntent)
+                .setProgress(100, 0, true)
+                .setCategory(CHANNEL_ID);
+
+        manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+
 
         manager.notify(startId, notification.build());
 
         String url = intent.getStringExtra("url");
         String fileName = intent.getStringExtra("fileName");
         this.startId  = startId;
-        Log.d(TAG, "onStartCommand: "+this);
-
+        isCancelled  = false;
         startForeground(this.startId, notification.build());
+
         getVideoFromURL(url, fileName);
-//        new Thread(() -> {
-//            for(int i = 0 ; i<6;i++){
-//                try {
-//                    Thread.sleep(1000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//            isCancelled.set(true);
-//            Log.d(TAG, "onStartCommand: called");
-//        }).start();
         return START_STICKY;
     }
 
@@ -150,8 +153,9 @@ public class Download  extends Service implements Serializable {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        isCancelled.set(true);
+
+        unregisterReceiver(onDownloadNotification);
         stopSelf(this.startId); // crucial to call this after the video is downloaded
     }
-    
+
 }
