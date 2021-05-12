@@ -1,6 +1,7 @@
 package com.example.videostreamingapp.VideosAPI.RetrofitResponse;
 
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import java.io.Serializable;
@@ -15,16 +16,11 @@ public class Videos implements Serializable {
     @PrimaryKey(autoGenerate = true)
     private int id;
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
     private String description , title , thumb , subtitle;
+
+    @Ignore
     private List<String> sources;
+
 
     public String getDescription() {
         return description;
@@ -65,4 +61,14 @@ public class Videos implements Serializable {
     public void setSources(List<String> sources) {
         this.sources = sources;
     }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+
 }

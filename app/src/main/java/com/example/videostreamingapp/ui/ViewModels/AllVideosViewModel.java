@@ -1,4 +1,4 @@
-package com.example.videostreamingapp.ui;
+package com.example.videostreamingapp.ui.ViewModels;
 
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -16,6 +16,7 @@ public class AllVideosViewModel extends ViewModel implements DataSource.SetResul
         dataSource = new DataSource();
         listMutableLiveData = new MutableLiveData<>();
         listMutableLiveData.setValue(null);
+        fetchVideos();
     }
 
     public MutableLiveData<List<Videos>> getListMutableLiveData() {

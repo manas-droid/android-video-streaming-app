@@ -1,6 +1,5 @@
 package com.example.videostreamingapp.ui.Adapters;
 
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,7 +8,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -17,17 +15,15 @@ import com.bumptech.glide.Glide;
 import com.example.videostreamingapp.R;
 import com.example.videostreamingapp.VideosAPI.RetrofitResponse.Videos;
 import com.example.videostreamingapp.ui.Fragments.SavedVideoFragment;
-import com.example.videostreamingapp.ui.Fragments.VideoFragment;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.List;
 
-@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosViewHolder> {
+public class SavedVideoAdapter extends RecyclerView.Adapter<SavedVideoAdapter.VideosViewHolder> {
     private List<Videos> videos;
     private static final String TAG = "VideosAdapter";
 
-    public VideosAdapter(List<Videos> videos) {
+    public SavedVideoAdapter(List<Videos> videos) {
         this.videos = videos;
     }
 
@@ -47,20 +43,17 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosView
         Glide.with(holder.itemView.getContext()).load(video.getThumb())
                 .placeholder(R.drawable.ic_placeholder)
                 .into(holder.thumbNail);
-        holder.materialCardView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                VideoFragment videoFragment = new VideoFragment();
-                Bundle bundle = new Bundle();
-                bundle.putSerializable("video", video);
-                videoFragment.setArguments(bundle);
-                AppCompatActivity appCompatActivity = (AppCompatActivity) v.getContext();
+        holder.materialCardView.setOnClickListener(v -> {
+            SavedVideoFragment videoFragment = new SavedVideoFragment();
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("video", video);
+            videoFragment.setArguments(bundle);
+            AppCompatActivity appCompatActivity = (AppCompatActivity) v.getContext();
 
-                appCompatActivity.getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, videoFragment)
-                        .addToBackStack(null)
-                        .commit();
-            }
+            appCompatActivity.getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, videoFragment)
+                    .addToBackStack(null)
+                    .commit();
         });
     }
 
@@ -70,7 +63,7 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideosView
     }
 
 
-    public class VideosViewHolder extends RecyclerView.ViewHolder{
+    public static class VideosViewHolder extends RecyclerView.ViewHolder{
         public TextView title, subTitle;
         public ImageView thumbNail;
         public MaterialCardView materialCardView;

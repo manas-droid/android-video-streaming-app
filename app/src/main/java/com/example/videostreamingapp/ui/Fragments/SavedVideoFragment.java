@@ -1,10 +1,7 @@
 package com.example.videostreamingapp.ui.Fragments;
 
-import android.Manifest;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -15,30 +12,24 @@ import android.view.ViewGroup;
 import android.widget.MediaController;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.videostreamingapp.R;
 import com.example.videostreamingapp.VideosAPI.RetrofitResponse.Videos;
-import com.example.videostreamingapp.utils.Download;
 
-@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-public class VideoFragment extends Fragment {
+import java.io.File;
+import java.io.IOException;
+
+public class SavedVideoFragment extends Fragment {
     private Videos video;
     private TextView title , subTitle , description;
     private VideoView videoView;
     private ProgressBar progressBar;
-    private  final int WRITE_PERMISSION = 1001;
     private  static final String TAG = "VideoFragment";
-    private String fileName;
-    private String url;
-    private final int JOB_CODE = 404;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -64,16 +55,18 @@ public class VideoFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        fileName = video.getTitle();
 
         title.setText(video.getTitle());
         subTitle.setText(video.getSubtitle());
         description.setText(video.getDescription());
-        url = video.getSources().get(0);
+        File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) , video.getTitle()+".mp4");
 
-
-        videoView.setVideoPath(video.getSources().get(0));
-
+        try {
+            Log.d(TAG, "onActivityCreated: "+file.getCanonicalPath());
+            videoView.setVideoPath(file.getCanonicalPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         MediaController mediaController  = new MediaController(getContext());
         mediaController.setAnchorView(videoView);
         videoView.setMediaController(mediaController);
@@ -96,48 +89,12 @@ public class VideoFragment extends Fragment {
 
         switch (item.getItemId()){
             case R.id.downLoad :
-                startDownLoad();
+                Log.d(TAG, "onOptionsItemSelected: here");
                 break;
         }
         return true;
     }
 
 
-    public void startDownLoad(){
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-            if(ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
-                downloadFile(fileName ,url );
-            }
-            else{
-                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_PERMISSION);
-            }
-        }else{
-            downloadFile(fileName , url);
-        }
-    }
-
-
-
-
-    public void downloadFile(String fileName , String url){
-        Log.d(TAG, "downloadFile: here");
-        Intent serviceIntent = new Intent (getContext() , Download.class);
-        serviceIntent.putExtra("video", video);
-
-        ContextCompat.startForegroundService(getActivity(), serviceIntent);
-    }
-
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(requestCode == WRITE_PERMISSION){
-            if(grantResults.length>0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                downloadFile(fileName, url);
-            }else{
-                Toast.makeText(getActivity(), "Permission Denied!", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
 
 }

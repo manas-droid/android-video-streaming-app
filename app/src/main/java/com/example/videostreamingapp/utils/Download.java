@@ -17,7 +17,9 @@ import android.widget.VideoView;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import com.example.videostreamingapp.OfflineVideoDatabase.VideoRepository;
 import com.example.videostreamingapp.R;
+import com.example.videostreamingapp.VideosAPI.RetrofitResponse.Videos;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -41,6 +43,9 @@ public class Download  extends Service {
     private DownloadResponse response;
     private BroadcastReceiver onDownloadNotification;
     boolean isCancelled = false;
+    private Videos video;
+    private VideoRepository videoRepository;
+
     @Override
         public void onCreate() {
             super.onCreate();
@@ -66,7 +71,7 @@ public class Download  extends Service {
             IntentFilter intentFilter = new IntentFilter(ACTION);
             intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
             registerReceiver(onDownloadNotification , intentFilter);
-        }
+    }
 
     public void getVideoFromURL(String url , String fileName ) {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -109,7 +114,6 @@ public class Download  extends Service {
                 if(response == null) response = DownloadResponse.SUCCESS;
 
                 notification.setCategory("Download Finished").setProgress(0, 0, false);
-                VideoView videoView = new VideoView(getBaseContext());
                 manager.notify(this.startId, notification.build());
 
                 stopSelf(this.startId);  // crucial to call it here after the video is downloaded
@@ -131,10 +135,8 @@ public class Download  extends Service {
 
                 if(response == DownloadResponse.SUCCESS){
                     // save video class to SQLite
-
-
+                    videoRepository.insert(video);
                 }
-
             }
         });
         executorService.shutdown();
@@ -146,14 +148,12 @@ public class Download  extends Service {
         manager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
 
         manager.notify(startId, notification.build());
-
-        String url = intent.getStringExtra("url");
-        String fileName = intent.getStringExtra("fileName");
+        video = (Videos) intent.getSerializableExtra("video");
+        videoRepository = new VideoRepository(getApplication());
         this.startId  = startId;
         isCancelled  = false;
         startForeground(this.startId, notification.build());
-
-        getVideoFromURL(url, fileName);
+        getVideoFromURL(video.getSources().get(0), video.getTitle());
         return START_STICKY;
     }
 

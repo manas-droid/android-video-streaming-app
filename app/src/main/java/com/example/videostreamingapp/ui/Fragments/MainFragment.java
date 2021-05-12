@@ -1,6 +1,7 @@
 package com.example.videostreamingapp.ui.Fragments;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.videostreamingapp.R;
 import com.example.videostreamingapp.VideosAPI.RetrofitResponse.Videos;
 import com.example.videostreamingapp.ui.Adapters.VideosAdapter;
-import com.example.videostreamingapp.ui.AllVideosViewModel;
+import com.example.videostreamingapp.ui.ViewModels.AllVideosViewModel;
 
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class MainFragment extends Fragment {
     private AllVideosViewModel allVideosViewModel;
     private Observer<List<Videos>> observer;
     private  RecyclerView recyclerView;
+    private static final String TAG = "MainFragment";
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,7 +40,7 @@ public class MainFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
         recyclerView = view.findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        allVideosViewModel.fetchVideos();
+        Log.d(TAG, "MainFragment onCreateView: called");
         observer =  new Observer<List<Videos>>() {
             @Override
             public void onChanged(List<Videos> videos) {
